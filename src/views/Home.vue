@@ -100,16 +100,25 @@ export default {
         let ctx = this.$refs.canvas.getContext("2d");
         ctx.lineWidth = 1 * this.ratio;
         ctx.strokeStyle = "#cecece";
+        ctx.font = `normal ${12 * this.ratio}px PingFang SC`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         ctx.beginPath();
         row.forEach(i => {
           ctx.moveTo(...this.handlerLineAddFixed(i[0].x, i[0].y));
           ctx.lineTo(...this.handlerLineAddFixed(i[1].x, i[1].y));
         });
-        col.forEach(i => {
+        col.forEach((i, index) => {
           ctx.moveTo(...this.handlerLineAddFixed(i[0].x, i[0].y));
+          if (this.wordsHead[index]) {
+            ctx.fillText(this.wordsHead[index], i[0].x + (index + 1) * 80, 20);
+          }
           ctx.lineTo(...this.handlerLineAddFixed(i[1].x, i[1].y));
         });
         ctx.stroke();
+        // this.wordsHead.forEach(i=>{
+        //   ctx.fillText()
+        // })
       });
     },
     handlerLineAddFixed(x, y) {
@@ -126,6 +135,7 @@ export default {
   .header {
     height: 40px;
     background-color: pink;
+    width: 100%;
   }
   .main {
     margin-top: 20px;
