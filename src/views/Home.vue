@@ -158,11 +158,13 @@ export default {
     //单击单元格
     handlerCenterClick(e) {
       // console.log(e);
-      let { cellWidth, cellHeight, clickCell, clickCellInfo } = this;
+      let { cellWidth, cellHeight, clickCell, clickCellInfo, scrollBar } = this;
       let { offsetX, offsetY } = e;
       let obj = {};
-      obj.x = clickCell.x = Math.floor(offsetX / cellWidth) * cellWidth;
-      obj.y = clickCell.y = Math.floor(offsetY / cellHeight) * cellHeight;
+      clickCell.x = Math.floor(offsetX / cellWidth) * cellWidth + scrollBar.x;
+      obj.x = Math.floor(offsetX / cellWidth) * cellWidth;
+      clickCell.y = Math.floor(offsetY / cellHeight) * cellHeight + scrollBar.y;
+      obj.y = Math.floor(offsetY / cellHeight) * cellHeight;
       clickCell.show = true;
       obj.txt = `${this.wordsHead[Math.floor(offsetX / cellWidth)]}${Math.floor(
         offsetY / cellHeight
