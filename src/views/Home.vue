@@ -5,6 +5,13 @@
     </div>
     <div class="main">
       <div
+        class="allSelect"
+        :style="{
+          width: numCellWidth + 0.5 + 'px',
+          height: cellHeight + 0.5 + 'px'
+        }"
+      ></div>
+      <div
         class="top"
         ref="top"
         :style="{
@@ -71,7 +78,15 @@
             left: clickCell.x + 'px',
             top: clickCell.y + 'px'
           }"
-        ></div>
+        >
+          <div
+            class="cellIpt"
+            contenteditable
+            v-if="cellIpt"
+            ref="cellIpt"
+            @blur="handlerCellIptBlur"
+          ></div>
+        </div>
       </div>
     </div>
   </div>
@@ -144,7 +159,9 @@ export default {
         show: false
       },
       //当前点击的cell信息
-      clickCellInfo: {}
+      clickCellInfo: {},
+      //显示输入框
+      cellIpt: false
     };
   },
   methods: {
@@ -155,10 +172,65 @@ export default {
       this.handlerDomResize();
       this.handlerDomAddEvents();
     },
+    //单元格输入的内容
+    handlerCellIptBlur(e) {
+      // console.log(e);
+      let {
+        centerCells,
+        centerCanvas: { ctx },
+        clickCellInfo: { xNum, yNum, x, y, width, height },
+        cellWidth,
+        cellHeight,
+        ratio
+      } = this;
+      let txt = e.target.innerHTML;
+      ctx.fillStyle = "rgb(38, 38, 38);";
+      if (txt === centerCells[yNum][xNum].txt) {
+        e.target.innerHTML = "";
+      } else {
+        centerCells[yNum][xNum].txt = txt;
+        ctx.clearRect(
+          x * ratio,
+          y * ratio,
+          cellWidth * ratio,
+          cellHeight * ratio
+        );
+        this.$nextTick(() => {
+          this.handlerDrawTxt(ctx, x, y, width, height, txt);
+        });
+        e.target.innerHTML = "";
+      }
+    },
+    //双击单元格
+    handlerDbClick() {
+      this.cellIpt = true;
+      let {
+        centerCells,
+        clickCellInfo: { xNum, yNum }
+      } = this;
+      let range = window.getSelection();
+      this.$nextTick(() => {
+        this.$refs.cellIpt.focus();
+        this.$refs.cellIpt.innerHTML = centerCells[yNum][xNum].txt;
+        range.selectAllChildren(this.$refs.cellIpt);
+        range.collapseToEnd();
+      });
+    },
     //单击单元格
     handlerCenterClick(e) {
       // console.log(e);
-      let { cellWidth, cellHeight, clickCell, clickCellInfo, scrollBar } = this;
+      let {
+        cellWidth,
+        cellHeight,
+        clickCell,
+        clickCellInfo,
+        scrollBar,
+        cellIpt
+      } = this;
+      //判断当前是否编辑
+      if (cellIpt) {
+        this.cellIpt = false;
+      }
       let { offsetX, offsetY } = e;
       let obj = {};
       clickCell.x = Math.floor(offsetX / cellWidth) * cellWidth + scrollBar.x;
@@ -166,9 +238,13 @@ export default {
       clickCell.y = Math.floor(offsetY / cellHeight) * cellHeight + scrollBar.y;
       obj.y = Math.floor(offsetY / cellHeight) * cellHeight;
       clickCell.show = true;
-      obj.txt = `${this.wordsHead[Math.floor(offsetX / cellWidth)]}${Math.floor(
-        offsetY / cellHeight
-      ) + 1}`;
+      obj.position = `${
+        this.wordsHead[Math.floor(offsetX / cellWidth)]
+      }${Math.floor(offsetY / cellHeight) + 1}`;
+      obj.xNum = Math.floor(offsetX / cellWidth);
+      obj.yNum = Math.floor(offsetY / cellHeight);
+      obj.width = cellWidth;
+      obj.height = cellHeight;
       Object.assign(clickCellInfo, obj);
     },
     handlerDomAddEvents() {
@@ -178,6 +254,11 @@ export default {
           this.handlerWheel(e);
         },
         { passive: false }
+      );
+      this.$refs.center.addEventListener(
+        "dblclick",
+        this.handlerDbClick,
+        false
       );
     },
     handlerWheel(e) {
@@ -255,12 +336,13 @@ export default {
       this.$nextTick(() => {
         ctx.lineWidth = 1 * this.ratio;
         ctx.strokeStyle = "#cecece";
+        // ctx.fillStyle = "#FAFAFA";
         ctx.font = `normal ${12 * this.ratio}px PingFang SC`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         headCells.forEach(i => {
           let { x, y, width, height, txt } = i;
-          this.handlerPointRect(ctx, x, y, width, height, txt);
+          this.handlerPointRect(ctx, x, y, width, height, txt, "#fafafa");
         });
       });
     },
@@ -299,7 +381,16 @@ export default {
         centerCells.forEach(z => {
           z.forEach(i => {
             let { x, y, width, height, txt } = i;
-            this.handlerPointRect(ctx, x, y, width, height, txt);
+            this.handlerPointRect(
+              ctx,
+              x,
+              y,
+              width,
+              height,
+              txt,
+              null,
+              "rgb(38, 38, 38)"
+            );
           });
         });
       });
@@ -329,7 +420,7 @@ export default {
         ctx.textBaseline = "middle";
         letfCells.forEach(i => {
           let { x, y, width, height, txt } = i;
-          this.handlerPointRect(ctx, x, y, width, height, txt, "num");
+          this.handlerPointRect(ctx, x, y, width, height, txt, "#fafafa");
         });
       });
     },
@@ -339,30 +430,35 @@ export default {
     handlerPointAddFixed(x, y) {
       return [x * this.ratio, y * this.ratio];
     },
-    handlerPointRect(ctx, x, y, width, height, txt, type) {
+    //绘制单元格
+    handlerPointRect(ctx, x, y, width, height, txt, bgc, color) {
+      ctx.fillStyle = bgc ? bgc : "#fff";
       ctx.beginPath();
       ctx.moveTo(...this.handlerLineAddFixed(x, y));
       ctx.lineTo(...this.handlerLineAddFixed(x + width, y));
-      ctx.moveTo(...this.handlerLineAddFixed(x + width, y));
       ctx.lineTo(...this.handlerLineAddFixed(x + width, y + height));
-      ctx.moveTo(...this.handlerLineAddFixed(x, y));
       ctx.lineTo(...this.handlerLineAddFixed(x, y + height));
-      ctx.moveTo(...this.handlerLineAddFixed(x, y + height));
-      ctx.lineTo(...this.handlerLineAddFixed(x + width, y + height));
+      ctx.lineTo(...this.handlerLineAddFixed(x, y));
+      ctx.fill();
+      ctx.closePath();
       ctx.stroke();
+      ctx.fillStyle = color ? color : "#000";
       if (txt.toString().length > 0) {
-        if (!type) {
-          ctx.fillText(
-            txt,
-            ...this.handlerPointAddFixed(x + width / 2, (y + height) / 2)
-          );
-        } else if (type == "num") {
-          ctx.fillText(
-            txt,
-            ...this.handlerPointAddFixed(x + width / 2, y + height / 2)
-          );
-        }
+        ctx.fillText(
+          txt,
+          ...this.handlerPointAddFixed(x + width / 2, y + height / 2)
+        );
       }
+    },
+    //绘制文字
+    handlerDrawTxt(ctx, x, y, width, height, txt) {
+      let { cellWidth, ratio } = this;
+      ctx.textAlign = "left";
+      ctx.fillText(
+        txt,
+        ...this.handlerPointAddFixed(x + 5, y + height / 2),
+        (cellWidth - 5) * ratio
+      );
     }
   },
   mounted() {
@@ -382,6 +478,14 @@ export default {
   .main {
     // margin-top: 20px;
     position: relative;
+    .allSelect {
+      position: absolute;
+      left: 0px;
+      top: 0px;
+      border: 1px solid #cecece;
+      box-sizing: border-box;
+      z-index: 11;
+    }
     .top {
       margin-left: 40px;
       // height: 25px;
@@ -389,6 +493,7 @@ export default {
       overflow: hidden;
       .topCanvas {
         position: absolute;
+        z-index: 10;
       }
     }
     .left {
@@ -396,6 +501,7 @@ export default {
       overflow: hidden;
       .leftCanvas {
         position: absolute;
+        z-index: 10;
       }
     }
     .center {
@@ -403,12 +509,36 @@ export default {
       overflow: hidden;
       .centerCanvas {
         position: absolute;
+        z-index: 10;
       }
       .clickCell {
         border: 2px solid #2a83fa;
         // box-shadow: 0 0 0 1px #2a83fa;
         position: absolute;
         box-sizing: border-box;
+        z-index: 11;
+        // background: #eff9ff;
+        .cellIpt {
+          z-index: 12;
+          position: absolute;
+          left: 0;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          padding: 5px 6px;
+          overflow: hidden;
+          word-break: break-word;
+          white-space: pre;
+          width: 100%;
+          background-color: rgb(255, 255, 255);
+          color: rgb(38, 38, 38);
+          resize: none;
+          font-size: 12px;
+          line-height: 1.14;
+          outline: none;
+          text-decoration: none;
+          box-sizing: border-box;
+        }
       }
     }
   }
