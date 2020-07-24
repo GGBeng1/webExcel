@@ -1,7 +1,11 @@
 <template>
   <div class="home" ref="home">
     <div class="header">
-      header
+      <div class="toolBar"></div>
+      <div class="cellVal">
+        <div class="cell">{{ clickCellInfo.position }}</div>
+        <div class="val">{{ clickCellInfo.txt }}</div>
+      </div>
     </div>
     <div class="main">
       <div
@@ -85,6 +89,7 @@
             v-if="cellIpt"
             ref="cellIpt"
             @blur="handlerCellIptBlur"
+            @input="handlerCellIptIput"
           ></div>
         </div>
       </div>
@@ -166,7 +171,8 @@ export default {
         xNum: 0,
         yNum: 0,
         width: 0,
-        height: 0
+        height: 0,
+        txt: ""
       },
       //显示输入框
       cellIpt: false
@@ -217,6 +223,9 @@ export default {
         e.target.innerHTML = "";
       }
     },
+    handlerCellIptIput(e) {
+      this.clickCellInfo.txt += e.data;
+    },
     handlerClearRect(ctx, x, y, cellWidth, cellHeight) {
       let { handlerPointAddFixed } = this;
       ctx.clearRect(
@@ -252,7 +261,8 @@ export default {
         clickCell,
         clickCellInfo,
         scrollBar,
-        cellIpt
+        cellIpt,
+        centerCells
       } = this;
       //判断当前是否编辑
       if (cellIpt) {
@@ -272,6 +282,8 @@ export default {
       clickCellInfo.yNum = Math.floor(offsetY / cellHeight);
       clickCellInfo.width = cellWidth;
       clickCellInfo.height = cellHeight;
+      clickCellInfo.txt =
+        centerCells[clickCellInfo.yNum][clickCellInfo.xNum].txt;
       // // 存储当前点击的单元格信息
       // Object.assign(clickCellInfo, obj);
     },
@@ -338,8 +350,8 @@ export default {
       }
     },
     handlerDomResize() {
-      this.$refs.left.style.height = window.innerHeight - 40 - 26 + "px";
-      this.$refs.center.style.height = window.innerHeight - 40 - 26 + "px";
+      this.$refs.left.style.height = window.innerHeight - 60 - 26 + "px";
+      this.$refs.center.style.height = window.innerHeight - 60 - 26 + "px";
       this.$refs.top.style.width = window.innerWidth - this.numCellWidth + "px";
       this.$refs.center.style.width =
         window.innerWidth - this.numCellWidth + "px";
@@ -652,9 +664,35 @@ export default {
   width: 100%;
   height: 100%;
   .header {
-    height: 40px;
-    background-color: pink;
+    height: 60px;
+    // background-color: pink;
     width: 100%;
+    .toolBar {
+      height: 40px;
+      box-sizing: border-box;
+      border-top: 1px solid #e8e8e8;
+      border-bottom: 1px solid #e8e8e8;
+    }
+    .cellVal {
+      height: 20px;
+      display: flex;
+      .cell {
+        width: 40px;
+        padding-left: 7px;
+        text-align: center;
+        line-height: 20px;
+        height: 100%;
+      }
+      .val {
+        flex: 1;
+        margin-left: 24px;
+        white-space: pre;
+        overflow-x: auto;
+        overflow-y: hidden;
+        height: 100%;
+        line-height: 20px;
+      }
+    }
   }
   .main {
     // margin-top: 20px;
