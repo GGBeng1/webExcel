@@ -1,24 +1,40 @@
-# canvastable
+# webExcel
 
-## Project setup
+## 安装
+
 ```
 yarn install
 ```
 
-### Compiles and hot-reloads for development
+### 运行
+
 ```
-yarn serve
+yarn run serve
 ```
 
-### Compiles and minifies for production
+### 说明
+
 ```
-yarn build
+基于vue开发的webEcel,采用快速的canvas绘画,webworker处理数据,快速高效!
+
 ```
 
-### Lints and fixes files
-```
-yarn lint
-```
+### 更新说明
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+- 支持点击 cell 输入
+- 点击 cell 在行列头提示及 head 栏展示位置及值
+
+### 未来
+
+- 加入选中
+- 加入单元格合并
+- 加入列行拖拽
+- 加入删除列行
+
+### 查看示例
+
+See [demo](https://ggbeng1.github.io/Gantt/#/)
+
+### 展示图
+
+<img src="public/1.png" alt="">
