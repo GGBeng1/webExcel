@@ -159,10 +159,23 @@ export default {
         show: false
       },
       //当前点击的cell信息
-      clickCellInfo: {},
+      clickCellInfo: {
+        x: 0,
+        y: 0,
+        position: "",
+        xNum: 0,
+        yNum: 0,
+        width: 0,
+        height: 0
+      },
       //显示输入框
       cellIpt: false
     };
+  },
+  computed: {
+    copyClickCellInfo() {
+      return JSON.parse(JSON.stringify(this.clickCellInfo));
+    }
   },
   methods: {
     init() {
@@ -175,12 +188,16 @@ export default {
     //单元格输入的内容
     handlerCellIptBlur(e) {
       // console.log(e);
+      //ctx.measureText(txt).width
       let {
         centerCells,
         centerCanvas: { ctx },
         clickCellInfo: { xNum, yNum, x, y, width, height },
         cellWidth,
         cellHeight,
+        handlerPointAddFixed,
+        handlerClearRect,
+        handlerPointRect,
         ratio
       } = this;
       let txt = e.target.innerHTML;
@@ -189,17 +206,27 @@ export default {
         e.target.innerHTML = "";
       } else {
         centerCells[yNum][xNum].txt = txt;
-        ctx.clearRect(
-          x * ratio,
-          y * ratio,
-          cellWidth * ratio,
-          cellHeight * ratio
-        );
-        this.$nextTick(() => {
-          this.handlerDrawTxt(ctx, x, y, width, height, txt);
-        });
+        // 清除区域内容
+        handlerClearRect(ctx, x, y, cellWidth, cellHeight);
+        //补充上清除的边框
+        handlerPointRect(ctx, x, y, width, height, "", null, "rgb(38, 38, 38)");
+        // this.handlerPointHalfRect(ctx, x, y, width, height);
+        // this.$nextTick(() => {
+        this.handlerDrawTxt(ctx, x, y, width, height, txt);
+        // });
         e.target.innerHTML = "";
       }
+    },
+    handlerClearRect(ctx, x, y, cellWidth, cellHeight) {
+      let { handlerPointAddFixed } = this;
+      ctx.clearRect(
+        ...handlerPointAddFixed(x + 1, y + 1),
+        ...handlerPointAddFixed(cellWidth, cellHeight)
+      );
+      ctx.clearRect(
+        ...handlerPointAddFixed(x, y),
+        ...handlerPointAddFixed(cellWidth, cellHeight)
+      );
     },
     //双击单元格
     handlerDbClick() {
@@ -232,20 +259,21 @@ export default {
         this.cellIpt = false;
       }
       let { offsetX, offsetY } = e;
-      let obj = {};
+      // let obj = {};
       clickCell.x = Math.floor(offsetX / cellWidth) * cellWidth + scrollBar.x;
-      obj.x = Math.floor(offsetX / cellWidth) * cellWidth;
+      clickCellInfo.x = Math.floor(offsetX / cellWidth) * cellWidth;
       clickCell.y = Math.floor(offsetY / cellHeight) * cellHeight + scrollBar.y;
-      obj.y = Math.floor(offsetY / cellHeight) * cellHeight;
+      clickCellInfo.y = Math.floor(offsetY / cellHeight) * cellHeight;
       clickCell.show = true;
-      obj.position = `${
+      clickCellInfo.position = `${
         this.wordsHead[Math.floor(offsetX / cellWidth)]
       }${Math.floor(offsetY / cellHeight) + 1}`;
-      obj.xNum = Math.floor(offsetX / cellWidth);
-      obj.yNum = Math.floor(offsetY / cellHeight);
-      obj.width = cellWidth;
-      obj.height = cellHeight;
-      Object.assign(clickCellInfo, obj);
+      clickCellInfo.xNum = Math.floor(offsetX / cellWidth);
+      clickCellInfo.yNum = Math.floor(offsetY / cellHeight);
+      clickCellInfo.width = cellWidth;
+      clickCellInfo.height = cellHeight;
+      // // 存储当前点击的单元格信息
+      // Object.assign(clickCellInfo, obj);
     },
     handlerDomAddEvents() {
       window.addEventListener(
@@ -317,7 +345,14 @@ export default {
         window.innerWidth - this.numCellWidth + "px";
     },
     handlerDrawHead() {
-      let { cellWidth, cellHeight, topCanvas, wordsHead, headCells } = this;
+      let {
+        cellWidth,
+        cellHeight,
+        topCanvas,
+        wordsHead,
+        headCells,
+        handlerPointRect
+      } = this;
       let ctx = this.$refs.topCanvas.getContext("2d");
       topCanvas.ctx = ctx;
       // let allCell = [];
@@ -342,7 +377,7 @@ export default {
         ctx.textBaseline = "middle";
         headCells.forEach(i => {
           let { x, y, width, height, txt } = i;
-          this.handlerPointRect(ctx, x, y, width, height, txt, "#fafafa");
+          handlerPointRect(ctx, x, y, width, height, txt, "#fafafa");
         });
       });
     },
@@ -352,7 +387,8 @@ export default {
         centerCells,
         wordsHead,
         cellWidth,
-        cellHeight
+        cellHeight,
+        handlerPointRect
       } = this;
       let ctx = this.$refs.centerCanvas.getContext("2d");
       centerCanvas.ctx = ctx;
@@ -381,7 +417,7 @@ export default {
         centerCells.forEach(z => {
           z.forEach(i => {
             let { x, y, width, height, txt } = i;
-            this.handlerPointRect(
+            handlerPointRect(
               ctx,
               x,
               y,
@@ -396,7 +432,13 @@ export default {
       });
     },
     handlerDrawLeft() {
-      let { numCellWidth, cellHeight, leftCanvas, letfCells } = this;
+      let {
+        numCellWidth,
+        cellHeight,
+        leftCanvas,
+        letfCells,
+        handlerPointRect
+      } = this;
       let ctx = this.$refs.leftCanvas.getContext("2d");
       leftCanvas.ctx = ctx;
       // let letfCells = [];
@@ -420,7 +462,7 @@ export default {
         ctx.textBaseline = "middle";
         letfCells.forEach(i => {
           let { x, y, width, height, txt } = i;
-          this.handlerPointRect(ctx, x, y, width, height, txt, "#fafafa");
+          handlerPointRect(ctx, x, y, width, height, txt, "#fafafa");
         });
       });
     },
@@ -430,7 +472,7 @@ export default {
     handlerPointAddFixed(x, y) {
       return [x * this.ratio, y * this.ratio];
     },
-    //绘制单元格
+    //绘制完整单元格
     handlerPointRect(ctx, x, y, width, height, txt, bgc, color) {
       ctx.fillStyle = bgc ? bgc : "#fff";
       ctx.beginPath();
@@ -450,6 +492,17 @@ export default {
         );
       }
     },
+    //绘制一半单元格
+    handlerPointHalfRect(ctx, x, y, width, height) {
+      ctx.strokeStyle = "#cecece";
+      ctx.beginPath();
+      ctx.moveTo(...this.handlerLineAddFixed(x, y));
+      ctx.lineTo(...this.handlerLineAddFixed(x + width, y));
+      ctx.moveTo(...this.handlerLineAddFixed(x, y));
+      ctx.lineTo(...this.handlerLineAddFixed(x, y + height));
+      ctx.closePath();
+      ctx.stroke();
+    },
     //绘制文字
     handlerDrawTxt(ctx, x, y, width, height, txt) {
       let { cellWidth, ratio } = this;
@@ -459,6 +512,87 @@ export default {
         ...this.handlerPointAddFixed(x + 5, y + height / 2),
         (cellWidth - 5) * ratio
       );
+    },
+    // 绘制点击单元格的行列头
+    handlerDrawClickRowCol(val) {
+      let { x, y, width, height, xNum, yNum } = val;
+      let {
+        leftCanvas,
+        topCanvas,
+        handlerPointAddFixed,
+        handlerClearRect,
+        numCellWidth,
+        handlerPointRect,
+        wordsHead
+      } = this;
+      let rowPosition = [0, y];
+      let colPosition = [x, 0];
+      // 清除当前行列头
+      handlerClearRect(leftCanvas.ctx, ...rowPosition, numCellWidth, height);
+      handlerClearRect(topCanvas.ctx, ...colPosition, width, height);
+      // // 绘画新的行列头
+      handlerPointRect(
+        leftCanvas.ctx,
+        ...rowPosition,
+        numCellWidth,
+        height,
+        yNum + 1,
+        "#E6E6E6"
+      );
+      handlerPointRect(
+        topCanvas.ctx,
+        ...colPosition,
+        width,
+        height,
+        wordsHead[xNum],
+        "#E6E6E6"
+      );
+    },
+    handlerClearOldClickRowCol(val) {
+      let { x, y, width, height, xNum, yNum } = val;
+      let {
+        leftCanvas,
+        topCanvas,
+        handlerPointAddFixed,
+        handlerClearRect,
+        numCellWidth,
+        handlerPointRect,
+        wordsHead
+      } = this;
+      let rowPosition = [0, y];
+      let colPosition = [x, 0];
+      // 清除当前行列头
+      handlerClearRect(leftCanvas.ctx, ...rowPosition, numCellWidth, height);
+      handlerClearRect(topCanvas.ctx, ...colPosition, width, height);
+      // // 绘画行列头
+      handlerPointRect(
+        leftCanvas.ctx,
+        ...rowPosition,
+        numCellWidth,
+        height,
+        yNum + 1,
+        "#fafafa"
+      );
+      handlerPointRect(
+        topCanvas.ctx,
+        ...colPosition,
+        width,
+        height,
+        wordsHead[xNum],
+        "#fafafa"
+      );
+    }
+  },
+  watch: {
+    copyClickCellInfo: {
+      handler: function(newVal, oldVal) {
+        // console.log(newVal, oldVal);
+        this.handlerDrawClickRowCol(newVal);
+        if (oldVal.position) {
+          this.handlerClearOldClickRowCol(oldVal);
+        }
+      },
+      deep: true
     }
   },
   mounted() {
@@ -509,7 +643,7 @@ export default {
       overflow: hidden;
       .centerCanvas {
         position: absolute;
-        z-index: 10;
+        // z-index: 10;
       }
       .clickCell {
         border: 2px solid #2a83fa;
