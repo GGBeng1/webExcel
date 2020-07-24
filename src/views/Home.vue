@@ -97,7 +97,8 @@
             class="scrollBar"
             :style="{
               top: rightScrollBar.top + 'px',
-              height: rightScrollBar.height + 'px'
+              height: rightScrollBar.height + 'px',
+              opacity: scrollBarOpacity
             }"
           ></div>
         </div>
@@ -168,6 +169,9 @@ export default {
           ((window.innerHeight - 60 - 25) / (25 * 100)) *
           (window.innerHeight - 60 - 25)
       },
+      // 滚动条透明度
+      scrollBarOpacity: 0,
+      scrollBarTimer: null,
       //表格数据
       centerCells: [],
       letfCells: [],
@@ -322,12 +326,18 @@ export default {
     handlerWheel(e) {
       e.preventDefault();
       e.returnValue = false;
+      let { handlerScrollX, handlerScrollY } = this;
+      this.scrollBarOpacity = 1;
+      window.clearTimeout(this.scrollBarTimer);
+      this.scrollBarTimer = window.setTimeout(() => {
+        this.scrollBarOpacity = 0;
+      }, 2000);
       const { deltaX, deltaY } = e;
       this.$nextTick(() => {
         if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          this.handlerScrollX(deltaX);
+          handlerScrollX(deltaX);
         } else {
-          this.handlerScrollY(deltaY);
+          handlerScrollY(deltaY);
         }
       });
     },
