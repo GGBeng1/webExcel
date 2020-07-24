@@ -503,6 +503,16 @@ export default {
       ctx.closePath();
       ctx.stroke();
     },
+    //绘制彩色边框 #2a83fa
+    handlerDrawBorder(ctx, x, y, x1, y1) {
+      ctx.strokeStyle = "#2a83fa";
+      ctx.beginPath();
+      ctx.moveTo(...this.handlerLineAddFixed(x, y));
+      ctx.lineTo(...this.handlerLineAddFixed(x1, y1));
+      ctx.closePath();
+      ctx.stroke();
+      ctx.strokeStyle = "#cecece";
+    },
     //绘制文字
     handlerDrawTxt(ctx, x, y, width, height, txt) {
       let { cellWidth, ratio } = this;
@@ -523,6 +533,7 @@ export default {
         handlerClearRect,
         numCellWidth,
         handlerPointRect,
+        handlerDrawBorder,
         wordsHead
       } = this;
       let rowPosition = [0, y];
@@ -539,6 +550,13 @@ export default {
         yNum + 1,
         "#E6E6E6"
       );
+      handlerDrawBorder(
+        leftCanvas.ctx,
+        numCellWidth,
+        y,
+        numCellWidth,
+        y + height
+      );
       handlerPointRect(
         topCanvas.ctx,
         ...colPosition,
@@ -547,8 +565,10 @@ export default {
         wordsHead[xNum],
         "#E6E6E6"
       );
+      handlerDrawBorder(topCanvas.ctx, x, height, x + width, height);
     },
-    handlerClearOldClickRowCol(val) {
+    // 清除单元格行列头
+    handlerClearOldClickRowCol(val, isX, isY) {
       let { x, y, width, height, xNum, yNum } = val;
       let {
         leftCanvas,
@@ -561,35 +581,62 @@ export default {
       } = this;
       let rowPosition = [0, y];
       let colPosition = [x, 0];
-      // 清除当前行列头
-      handlerClearRect(leftCanvas.ctx, ...rowPosition, numCellWidth, height);
-      handlerClearRect(topCanvas.ctx, ...colPosition, width, height);
-      // // 绘画行列头
-      handlerPointRect(
-        leftCanvas.ctx,
-        ...rowPosition,
-        numCellWidth,
-        height,
-        yNum + 1,
-        "#fafafa"
-      );
-      handlerPointRect(
-        topCanvas.ctx,
-        ...colPosition,
-        width,
-        height,
-        wordsHead[xNum],
-        "#fafafa"
-      );
+      if (isX && isY) {
+        // 清除当前行列头
+        handlerClearRect(leftCanvas.ctx, ...rowPosition, numCellWidth, height);
+        handlerClearRect(topCanvas.ctx, ...colPosition, width, height);
+        // // 绘画行列头
+        handlerPointRect(
+          leftCanvas.ctx,
+          ...rowPosition,
+          numCellWidth,
+          height,
+          yNum + 1,
+          "#fafafa"
+        );
+        handlerPointRect(
+          topCanvas.ctx,
+          ...colPosition,
+          width,
+          height,
+          wordsHead[xNum],
+          "#fafafa"
+        );
+      } else if (isX && !isY) {
+        handlerClearRect(leftCanvas.ctx, ...rowPosition, numCellWidth, height);
+        handlerPointRect(
+          leftCanvas.ctx,
+          ...rowPosition,
+          numCellWidth,
+          height,
+          yNum + 1,
+          "#fafafa"
+        );
+      } else if (!isX && isY) {
+        handlerClearRect(topCanvas.ctx, ...colPosition, width, height);
+        handlerPointRect(
+          topCanvas.ctx,
+          ...colPosition,
+          width,
+          height,
+          wordsHead[xNum],
+          "#fafafa"
+        );
+      }
     }
   },
   watch: {
     copyClickCellInfo: {
       handler: function(newVal, oldVal) {
-        // console.log(newVal, oldVal);
         this.handlerDrawClickRowCol(newVal);
         if (oldVal.position) {
-          this.handlerClearOldClickRowCol(oldVal);
+          if (newVal.x != oldVal.x && newVal.y != oldVal.y) {
+            this.handlerClearOldClickRowCol(oldVal, true, true);
+          } else if (newVal.x == oldVal.x && newVal.y != oldVal.y) {
+            this.handlerClearOldClickRowCol(oldVal, true);
+          } else if (newVal.x != oldVal.x && newVal.y == oldVal.y) {
+            this.handlerClearOldClickRowCol(oldVal, null, true);
+          }
         }
       },
       deep: true
