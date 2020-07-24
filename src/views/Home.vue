@@ -92,6 +92,15 @@
             @input="handlerCellIptIput"
           ></div>
         </div>
+        <div class="rightSideBar" ref="rightSideBar">
+          <div
+            class="scrollBar"
+            :style="{
+              top: rightScrollBar.top + 'px',
+              height: rightScrollBar.height + 'px'
+            }"
+          ></div>
+        </div>
       </div>
     </div>
   </div>
@@ -153,6 +162,12 @@ export default {
         x: 0,
         y: 0
       },
+      rightScrollBar: {
+        top: 0,
+        height:
+          ((window.innerHeight - 60 - 25) / (25 * 100)) *
+          (window.innerHeight - 60 - 25)
+      },
       //表格数据
       centerCells: [],
       letfCells: [],
@@ -181,6 +196,9 @@ export default {
   computed: {
     copyClickCellInfo() {
       return JSON.parse(JSON.stringify(this.clickCellInfo));
+    },
+    centerHeight() {
+      return window.innerHeight - 60 - 25;
     }
   },
   methods: {
@@ -333,8 +351,16 @@ export default {
     },
     //纵向滚动
     handlerScrollY(deltaY) {
-      let { scrollBar, leftCanvas, clickCell, clickCellInfo } = this;
+      let {
+        scrollBar,
+        leftCanvas,
+        clickCell,
+        clickCellInfo,
+        rightScrollBar,
+        centerHeight
+      } = this;
       scrollBar.y -= deltaY;
+      rightScrollBar.top += (deltaY / (100 * 25)) * (centerHeight - 3);
       if (
         -scrollBar.y + parseInt(this.$refs.left.style.height) >=
         leftCanvas.canvasHeight
@@ -342,8 +368,9 @@ export default {
         scrollBar.y = -(
           leftCanvas.canvasHeight - parseInt(this.$refs.left.style.height)
         );
+        rightScrollBar.top = centerHeight - 3 - rightScrollBar.height;
       } else if (scrollBar.y >= 0) {
-        scrollBar.y = 0;
+        scrollBar.y = rightScrollBar.top = 0;
       }
       if (clickCell.show) {
         clickCell.y = clickCellInfo.y + scrollBar.y;
@@ -757,6 +784,21 @@ export default {
           outline: none;
           text-decoration: none;
           box-sizing: border-box;
+        }
+      }
+      .rightSideBar {
+        position: absolute;
+        right: 3px;
+        top: 0px;
+        width: 10px;
+        bottom: 3px;
+        // background: pink;
+        .scrollBar {
+          position: absolute;
+          width: 10px;
+          background: rgba(0, 0, 0, 0.3);
+          border-radius: 10px;
+          cursor: pointer;
         }
       }
     }
