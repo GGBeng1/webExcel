@@ -33,7 +33,7 @@ yarn run serve
 
 ### 查看示例
 
-See [demo](https://ggbeng1.github.io/Gantt/#/)
+See [demo](https://ggbeng1.github.io/webExcel/)
 
 ### 展示图
 
