@@ -92,6 +92,7 @@
             @input="handlerCellIptIput"
           ></div>
         </div>
+        <!-- 纵向滚动条 -->
         <div class="rightSideBar" ref="rightSideBar">
           <div
             class="scrollBar"
@@ -100,8 +101,10 @@
               height: rightScrollBar.height + 'px',
               opacity: scrollBarOpacity
             }"
+            @mousedown="handlerScrollBarDragMove($event, true)"
           ></div>
         </div>
+        <!-- 横向滚动条 -->
         <div class="bottomScrollBar" ref="bottomScrollBar">
           <div
             class="scrollBar"
@@ -110,6 +113,7 @@
               width: bottomScrollBar.width + 'px',
               opacity: scrollBarOpacity
             }"
+            @mousedown="handlerScrollBarDragMove($event, false)"
           ></div>
         </div>
       </div>
@@ -169,6 +173,7 @@ export default {
         "Z"
       ],
       numCellWidth: 40,
+      // 滚动条相关
       scrollBar: {
         x: 0,
         y: 0
@@ -184,6 +189,7 @@ export default {
         width:
           ((window.innerWidth - 40) / (120 * 26)) * (window.innerWidth - 40)
       },
+      scrollBarMousedownPosition: {},
       // 滚动条透明度
       scrollBarOpacity: 0,
       scrollBarTimer: null,
@@ -412,6 +418,68 @@ export default {
       }
       if (clickCell.show) {
         clickCell.y = clickCellInfo.y + scrollBar.y;
+      }
+    },
+    // 拖动滚动条
+    handlerScrollBarDragMove(e, type) {
+      this.scrollBarMousedownPosition = {
+        x: e.clientX,
+        y: e.clientY,
+        type
+      };
+      this.scrollBarOpacity = 1;
+      window.clearTimeout(this.scrollBarTimer);
+      document.addEventListener("mousemove", this.handlerMoveWidth);
+      document.addEventListener("mouseup", () => {
+        document.removeEventListener("mousemove", this.handlerMoveWidth);
+        this.scrollBarTimer = window.setTimeout(() => {
+          this.scrollBarOpacity = 0;
+        }, 2000);
+      });
+    },
+    // 根据滚动条滚动距离计算top,left
+    handlerMoveWidth(e) {
+      let {
+        scrollBarMousedownPosition: bar,
+        rightScrollBar,
+        bottomScrollBar,
+        centerHeight,
+        scrollBar,
+        leftCanvas,
+        centerWidth,
+        topCanvas,
+        cellWidth,
+        wordsHead
+      } = this;
+      if (bar.type) {
+        let width = e.clientY - bar.y;
+        bar.y = e.clientY;
+        rightScrollBar.top += width;
+        scrollBar.y -= (width / (centerHeight - 3)) * (100 * 25);
+        if (rightScrollBar.top >= centerHeight - 3 - rightScrollBar.height) {
+          rightScrollBar.top = centerHeight - 3 - rightScrollBar.height;
+          scrollBar.y = -(
+            leftCanvas.canvasHeight - parseInt(this.$refs.left.style.height)
+          );
+        } else if (rightScrollBar.top <= 0) {
+          scrollBar.y = rightScrollBar.top = 0;
+        }
+      } else {
+        let width = e.clientX - bar.x;
+        bar.x = e.clientX;
+        bottomScrollBar.left += width;
+        scrollBar.x -= (width / centerWidth) * cellWidth * wordsHead.length;
+        if (bottomScrollBar.left <= 0) {
+          scrollBar.x = bottomScrollBar.left = 0;
+        } else if (
+          bottomScrollBar.left >=
+          centerWidth - bottomScrollBar.width
+        ) {
+          bottomScrollBar.left = centerWidth - bottomScrollBar.width;
+          scrollBar.x = -(
+            topCanvas.canvasWidth - parseInt(this.$refs.top.style.width)
+          );
+        }
       }
     },
     handlerDomResize() {
