@@ -102,6 +102,16 @@
             }"
           ></div>
         </div>
+        <div class="bottomScrollBar" ref="bottomScrollBar">
+          <div
+            class="scrollBar"
+            :style="{
+              left: bottomScrollBar.left + 'px',
+              width: bottomScrollBar.width + 'px',
+              opacity: scrollBarOpacity
+            }"
+          ></div>
+        </div>
       </div>
     </div>
   </div>
@@ -169,6 +179,11 @@ export default {
           ((window.innerHeight - 60 - 25) / (25 * 100)) *
           (window.innerHeight - 60 - 25)
       },
+      bottomScrollBar: {
+        left: 0,
+        width:
+          ((window.innerWidth - 40) / (120 * 26)) * (window.innerWidth - 40)
+      },
       // 滚动条透明度
       scrollBarOpacity: 0,
       scrollBarTimer: null,
@@ -203,6 +218,9 @@ export default {
     },
     centerHeight() {
       return window.innerHeight - 60 - 25;
+    },
+    centerWidth() {
+      return window.innerWidth - this.numCellWidth;
     }
   },
   methods: {
@@ -343,8 +361,16 @@ export default {
     },
     //横向滚动
     handlerScrollX(deltaX) {
-      let { scrollBar, topCanvas, clickCell, clickCellInfo } = this;
+      let {
+        scrollBar,
+        topCanvas,
+        clickCell,
+        clickCellInfo,
+        bottomScrollBar,
+        centerWidth
+      } = this;
       scrollBar.x = scrollBar.x - deltaX;
+      bottomScrollBar.left += (deltaX / (26 * 120)) * centerWidth;
       if (
         -scrollBar.x + parseInt(this.$refs.top.style.width) >=
         topCanvas.canvasWidth
@@ -352,8 +378,10 @@ export default {
         scrollBar.x = -(
           topCanvas.canvasWidth - parseInt(this.$refs.top.style.width)
         );
+        bottomScrollBar.left = centerWidth - bottomScrollBar.width;
       } else if (scrollBar.x >= 0) {
         scrollBar.x = 0;
+        bottomScrollBar.left = 0;
       }
       if (clickCell.show) {
         clickCell.x = clickCellInfo.x + scrollBar.x;
@@ -806,6 +834,20 @@ export default {
         .scrollBar {
           position: absolute;
           width: 10px;
+          background: rgba(0, 0, 0, 0.3);
+          border-radius: 10px;
+          cursor: pointer;
+        }
+      }
+      .bottomScrollBar {
+        position: absolute;
+        bottom: 3px;
+        left: 0px;
+        height: 10px;
+        right: 0px;
+        .scrollBar {
+          position: absolute;
+          height: 10px;
           background: rgba(0, 0, 0, 0.3);
           border-radius: 10px;
           cursor: pointer;
