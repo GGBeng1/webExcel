@@ -62,7 +62,6 @@
         <canvas
           ref="centerCanvas"
           class="centerCanvas"
-          @click="handlerCenterClick"
           :width="centerCanvas.canvasWidth * ratio"
           :height="centerCanvas.canvasHeight * ratio"
           :style="{
@@ -250,7 +249,7 @@ export default {
     },
     //单元格输入的内容
     handlerCellIptBlur(e) {
-      console.log("blur");
+      // console.log("blur");
       //ctx.measureText(txt).width
       let {
         centerCells,
@@ -297,17 +296,27 @@ export default {
     },
     //选中单元格
     handlerCenterCanvasMousedown(e) {
-      console.log(111);
+      // console.log(111);
       // this.handlerCenterClick(e);
       e.preventDefault();
-      e.stopPropagation();
+      this.mousedownXY = {
+        x: e.clientX,
+        y: e.clientY
+      };
       window.addEventListener("mousemove", this.handlerCanvasMousemove);
     },
     handlerCenterCanvasMouseup(e) {
-      console.log(222);
+      // console.log(222);
       e.preventDefault();
-      e.stopPropagation();
+      let {
+        mousedownXY: { x, y }
+      } = this;
+      let { clientX, clientY } = e;
+      if (x == clientX && y == clientY) {
+        this.handlerCenterClick(e);
+      }
       window.removeEventListener("mousemove", this.handlerCanvasMousemove);
+      return false;
     },
     handlerCanvasMousemove(e) {
       // console.log(e);
@@ -315,6 +324,7 @@ export default {
     //双击单元格
     handlerDbClick() {
       this.cellIpt = true;
+      // console.log("db");
       let {
         centerCells,
         clickCellInfo: { xNum, yNum }
@@ -330,7 +340,8 @@ export default {
     },
     //单击单元格
     handlerCenterClick(e) {
-      console.log(333);
+      // console.log(333);
+      // console.log(e);
       let {
         cellWidth,
         cellHeight,
@@ -338,13 +349,16 @@ export default {
         clickCellInfo,
         scrollBar,
         cellIpt,
-        centerCells
+        centerCells,
+        numCellWidth
       } = this;
       //判断当前是否编辑
       if (cellIpt) {
         this.cellIpt = false;
       }
-      let { offsetX, offsetY } = e;
+      let { clientX, clientY } = e;
+      let offsetX = clientX - numCellWidth;
+      let offsetY = clientY - 60 - cellHeight;
       // let obj = {};
       clickCell.x = Math.floor(offsetX / cellWidth) * cellWidth + scrollBar.x;
       clickCellInfo.x = Math.floor(offsetX / cellWidth) * cellWidth;
