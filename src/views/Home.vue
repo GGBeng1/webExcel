@@ -297,7 +297,7 @@ export default {
     //选中单元格
     handlerCenterCanvasMousedown(e) {
       // console.log(111);
-      // this.handlerCenterClick(e);
+      this.handlerCenterClick(e);
       e.preventDefault();
       this.mousedownXY = {
         x: e.clientX,
@@ -308,13 +308,6 @@ export default {
     handlerCenterCanvasMouseup(e) {
       // console.log(222);
       e.preventDefault();
-      let {
-        mousedownXY: { x, y }
-      } = this;
-      let { clientX, clientY } = e;
-      if (x == clientX && y == clientY) {
-        this.handlerCenterClick(e);
-      }
       window.removeEventListener("mousemove", this.handlerCanvasMousemove);
       return false;
     },
