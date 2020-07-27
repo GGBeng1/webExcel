@@ -1,7 +1,31 @@
 <template>
   <div class="home" ref="home">
     <div class="header">
-      <div class="toolBar"></div>
+      <div class="toolBar">
+        <div class="firstPart">
+          <i class="iconfont icon-save"></i>
+          <i class="iconfont icon-undo"></i>
+          <i class="iconfont icon-redo"></i>
+          <i class="iconfont icon-formatpainter-fill"></i>
+          <i class="iconfont icon-clear"></i>
+        </div>
+        <div class="secondPart">
+          <i class="iconfont icon-bold"></i>
+          <i class="iconfont icon-strikethrough"></i>
+          <i class="iconfont icon-underline"></i>
+          <i class="iconfont icon-italic"></i>
+          <i class="iconfont icon-font-colors"></i>
+          <i class="iconfont icon-bg-colors"></i>
+        </div>
+        <div class="thirdPart">
+          <i class="iconfont icon-align-left"></i>
+          <i class="iconfont icon-align-center"></i>
+          <i class="iconfont icon-align-right"></i>
+          <i class="iconfont icon-merge-cells"></i>
+          <i class="iconfont icon-solit-cells"></i>
+          <i class="iconfont icon-gongshi"></i>
+        </div>
+      </div>
       <div class="cellVal">
         <div class="cell">{{ clickCellInfo.position }}</div>
         <div class="val">{{ clickCellInfo.txt }}</div>
@@ -321,8 +345,24 @@ export default {
     // 选中范围
     handlerCanvasMousemove(e) {
       let {
-        clickCell: { x, y }
+        clickCell: { x, y },
+        numCellWidth,
+        scrollBar,
+        cellHeight,
+        cellWidth
       } = this;
+      let movePosition = {};
+      let { clientX, clientY } = e;
+      //选中的单元格
+      let selectArea = [];
+      movePosition.x = clientX - numCellWidth - scrollBar.x;
+      movePosition.y = clientY - 60 - cellHeight - scrollBar.y;
+      if (movePosition.x - x > cellWidth) {
+        console.log("x");
+      }
+      if (movePosition.y - y > cellHeight) {
+        console.log("y");
+      }
     },
     //双击单元格
     handlerDbClick() {
@@ -860,6 +900,24 @@ export default {
       box-sizing: border-box;
       border-top: 1px solid #e8e8e8;
       border-bottom: 1px solid #e8e8e8;
+      padding-left: 16px;
+      display: flex;
+      .firstPart,
+      .secondPart,
+      .thirdPart {
+        padding-right: 12px;
+        height: 100%;
+        display: flex;
+        border-right: 1px solid #e8e8e8;
+        box-sizing: border-box;
+        i {
+          margin-left: 12px;
+          font-size: 20px;
+          cursor: pointer;
+          line-height: 40px;
+          color: #595959;
+        }
+      }
     }
     .cellVal {
       height: 20px;
