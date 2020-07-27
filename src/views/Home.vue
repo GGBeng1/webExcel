@@ -197,14 +197,25 @@ export default {
       centerCells: [],
       letfCells: [],
       headCells: [],
-      //当前点击的cell
+      //当前单击的cell
       clickCell: {
         x: 0,
         y: 0,
         show: false
       },
-      //当前点击的cell信息
+      //当前单击的cell信息
       clickCellInfo: {
+        x: 0,
+        y: 0,
+        position: "",
+        xNum: 0,
+        yNum: 0,
+        width: 0,
+        height: 0,
+        txt: ""
+      },
+      //当前双击的cell信息
+      dbClickCellInfo: {
         x: 0,
         y: 0,
         position: "",
@@ -239,12 +250,13 @@ export default {
     },
     //单元格输入的内容
     handlerCellIptBlur(e) {
-      // console.log(e);
+      console.log("blur");
       //ctx.measureText(txt).width
       let {
         centerCells,
         centerCanvas: { ctx },
-        clickCellInfo: { xNum, yNum, x, y, width, height },
+        // clickCellInfo: ,
+        dbClickCellInfo: { xNum, yNum, x, y, width, height },
         cellWidth,
         cellHeight,
         handlerPointAddFixed,
@@ -283,6 +295,23 @@ export default {
         ...handlerPointAddFixed(cellWidth, cellHeight)
       );
     },
+    //选中单元格
+    handlerCenterCanvasMousedown(e) {
+      console.log(111);
+      // this.handlerCenterClick(e);
+      e.preventDefault();
+      e.stopPropagation();
+      window.addEventListener("mousemove", this.handlerCanvasMousemove);
+    },
+    handlerCenterCanvasMouseup(e) {
+      console.log(222);
+      e.preventDefault();
+      e.stopPropagation();
+      window.removeEventListener("mousemove", this.handlerCanvasMousemove);
+    },
+    handlerCanvasMousemove(e) {
+      // console.log(e);
+    },
     //双击单元格
     handlerDbClick() {
       this.cellIpt = true;
@@ -290,6 +319,7 @@ export default {
         centerCells,
         clickCellInfo: { xNum, yNum }
       } = this;
+      this.dbClickCellInfo = Object.assign({}, this.clickCellInfo);
       let range = window.getSelection();
       this.$nextTick(() => {
         this.$refs.cellIpt.focus();
@@ -300,7 +330,7 @@ export default {
     },
     //单击单元格
     handlerCenterClick(e) {
-      // console.log(e);
+      console.log(333);
       let {
         cellWidth,
         cellHeight,
@@ -330,8 +360,6 @@ export default {
       clickCellInfo.height = cellHeight;
       clickCellInfo.txt =
         centerCells[clickCellInfo.yNum][clickCellInfo.xNum].txt;
-      // // 存储当前点击的单元格信息
-      // Object.assign(clickCellInfo, obj);
     },
     handlerDomAddEvents() {
       window.addEventListener(
@@ -344,6 +372,16 @@ export default {
       this.$refs.center.addEventListener(
         "dblclick",
         this.handlerDbClick,
+        false
+      );
+      this.$refs.center.addEventListener(
+        "mousedown",
+        this.handlerCenterCanvasMousedown,
+        false
+      );
+      this.$refs.center.addEventListener(
+        "mouseup",
+        this.handlerCenterCanvasMouseup,
         false
       );
     },
