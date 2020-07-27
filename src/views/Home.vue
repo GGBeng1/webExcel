@@ -224,6 +224,11 @@ export default {
         height: 0,
         txt: ""
       },
+      // mousedown坐标
+      mousedownXY: {
+        x: 0,
+        y: 0
+      },
       //显示输入框
       cellIpt: false
     };
@@ -311,8 +316,11 @@ export default {
       window.removeEventListener("mousemove", this.handlerCanvasMousemove);
       return false;
     },
+    // 选中范围
     handlerCanvasMousemove(e) {
-      // console.log(e);
+      let {
+        clickCell: { x, y }
+      } = this;
     },
     //双击单元格
     handlerDbClick() {
@@ -349,9 +357,9 @@ export default {
       if (cellIpt) {
         this.cellIpt = false;
       }
-      let { clientX, clientY } = e;
-      let offsetX = clientX - numCellWidth;
-      let offsetY = clientY - 60 - cellHeight;
+      let { layerX, layerY } = e;
+      let offsetX = layerX + 1;
+      let offsetY = layerY + 1;
       // let obj = {};
       clickCell.x = Math.floor(offsetX / cellWidth) * cellWidth + scrollBar.x;
       clickCellInfo.x = Math.floor(offsetX / cellWidth) * cellWidth;
