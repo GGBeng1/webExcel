@@ -87,6 +87,8 @@
             contenteditable
             v-if="cellIpt"
             ref="cellIpt"
+            @mousedown.prevent.stop
+            @dblclick.prevent.stop
             @blur="handlerCellIptBlur"
             @input="handlerCellIptIput"
           ></div>
@@ -357,9 +359,9 @@ export default {
       if (cellIpt) {
         this.cellIpt = false;
       }
-      let { layerX, layerY } = e;
-      let offsetX = layerX + 1;
-      let offsetY = layerY + 1;
+      let { clientX, clientY } = e;
+      let offsetX = clientX - numCellWidth - scrollBar.x;
+      let offsetY = clientY - 60 - cellHeight - scrollBar.y;
       // let obj = {};
       clickCell.x = Math.floor(offsetX / cellWidth) * cellWidth + scrollBar.x;
       clickCellInfo.x = Math.floor(offsetX / cellWidth) * cellWidth;
