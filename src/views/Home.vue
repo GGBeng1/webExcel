@@ -256,7 +256,9 @@ export default {
         y: 0
       },
       //显示输入框
-      cellIpt: false
+      cellIpt: false,
+      // 选中的区域
+      selectArea: []
     };
   },
   computed: {
@@ -346,22 +348,64 @@ export default {
     handlerCanvasMousemove(e) {
       let {
         clickCell: { x, y },
+        clickCellInfo: { xNum, yNum },
         numCellWidth,
         scrollBar,
         cellHeight,
-        cellWidth
+        cellWidth,
+        selectArea
       } = this;
       let movePosition = {};
       let { clientX, clientY } = e;
       //选中的单元格
-      let selectArea = [];
+      let arr = [];
       movePosition.x = clientX - numCellWidth - scrollBar.x;
       movePosition.y = clientY - 60 - cellHeight - scrollBar.y;
-      if (movePosition.x - x > cellWidth) {
+      let b1 = movePosition.x - x > 0 && movePosition.x - x > cellWidth;
+      let b2 =
+        movePosition.x - x < 0 && x + cellWidth - movePosition.x > cellWidth;
+      let b3 = movePosition.y - y > 0 && movePosition.y - y > cellHeight;
+      let b4 =
+        movePosition.y - y < 0 && y + cellHeight - movePosition.y > cellHeight;
+      // console.log(b1, b2, b3, b4);
+      if ((b1 && b3) || (b1 && b4) || (b2 && b3) || (b2 && b4)) {
+        //横纵超出的cell个数
+        let xl =
+          movePosition.x - x > 0
+            ? Math.ceil((movePosition.x - x) / cellWidth)
+            : Math.ceil((x + cellWidth - movePosition.x) / cellWidth);
+        let yl =
+          movePosition.y - y > 0
+            ? Math.ceil((movePosition.y - y) / cellHeight)
+            : Math.ceil((y + cellHeight - movePosition.y) / cellHeight);
+        for (let i = 0; i < yl; i++) {
+          for (let j = 0; j < xl; j++) {
+            let obj = {
+              x: movePosition.x - x > 0 ? j * cellWidth + x : x - j * cellWidth,
+              y:
+                movePosition.y - y > 0 ? i * cellHeight + y : y - i * cellHeight
+            };
+            arr.push(obj);
+          }
+        }
+      } else if (b1 || b2) {
         console.log("x");
-      }
-      if (movePosition.y - y > cellHeight) {
+      } else if (b3 || b4) {
         console.log("y");
+      }
+      if (arr.length == 0) {
+        return;
+      } else if (arr.length > 0 && selectArea.length == 0) {
+        this.selectArea = arr;
+      } else if (arr.length > 0 && selectArea.length > 0) {
+        if (
+          arr[arr.length - 1].x == selectArea[selectArea.length - 1].x &&
+          arr[arr.length - 1].y == selectArea[selectArea.length - 1].y
+        ) {
+          return;
+        } else {
+          this.selectArea = arr;
+        }
       }
     },
     //双击单元格
