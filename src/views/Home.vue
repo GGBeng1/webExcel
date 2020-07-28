@@ -36,14 +36,15 @@
         class="allSelect"
         :style="{
           width: numCellWidth + 0.5 + 'px',
-          height: cellHeight + 0.5 + 'px'
+          height: cellHeight + 0.5 + 'px',
         }"
       ></div>
       <div
         class="top"
         ref="top"
         :style="{
-          height: topCanvas.canvasHeight + 'px'
+          height: topCanvas.canvasHeight + 'px',
+          cursor: isTopBorder ? 'col-resize' : 'auto',
         }"
       >
         <canvas
@@ -54,8 +55,9 @@
           :style="{
             width: topCanvas.canvasWidth + 'px',
             height: topCanvas.canvasHeight + 'px',
-            left: scrollBar.x + 'px'
+            left: scrollBar.x + 'px',
           }"
+          @mousemove="handlerTopMousemove"
         ></canvas>
       </div>
       <div
@@ -63,7 +65,7 @@
         ref="left"
         :style="{
           width: numCellWidth + 1 + 'px',
-          top: cellHeight + 'px'
+          top: cellHeight + 'px',
         }"
       >
         <canvas
@@ -74,7 +76,7 @@
           :style="{
             width: leftCanvas.canvasWidth + 'px',
             height: leftCanvas.canvasHeight + 'px',
-            top: scrollBar.y + 'px'
+            top: scrollBar.y + 'px',
           }"
         ></canvas>
       </div>
@@ -92,7 +94,7 @@
             width: centerCanvas.canvasWidth + 'px',
             height: centerCanvas.canvasHeight + 'px',
             top: scrollBar.y + 'px',
-            left: scrollBar.x + 'px'
+            left: scrollBar.x + 'px',
           }"
         >
         </canvas>
@@ -103,7 +105,7 @@
             width: cellWidth + 0.5 + 'px',
             height: cellHeight + 0.5 + 'px',
             left: clickCell.x + 'px',
-            top: clickCell.y + 'px'
+            top: clickCell.y + 'px',
           }"
         >
           <div
@@ -124,7 +126,7 @@
             :style="{
               top: rightScrollBar.top + 'px',
               height: rightScrollBar.height + 'px',
-              opacity: scrollBarOpacity
+              opacity: scrollBarOpacity,
             }"
             @mousedown="handlerScrollBarDragMove($event, true)"
           ></div>
@@ -136,7 +138,7 @@
             :style="{
               left: bottomScrollBar.left + 'px',
               width: bottomScrollBar.width + 'px',
-              opacity: scrollBarOpacity
+              opacity: scrollBarOpacity,
             }"
             @mousedown="handlerScrollBarDragMove($event, false)"
           ></div>
@@ -155,17 +157,18 @@ export default {
       topCanvas: {
         canvasWidth: 0,
         canvasHeight: 0,
-        ctx: null
+        ctx: null,
       },
+      isTopBorder: false,
       leftCanvas: {
         canvasWidth: 0,
         canvasHeight: 0,
-        ctx: null
+        ctx: null,
       },
       centerCanvas: {
         canvasWidth: 0,
         canvasHeight: 0,
-        ctx: null
+        ctx: null,
       },
       cellWidth: 120,
       cellHeight: 25,
@@ -195,24 +198,24 @@ export default {
         "W",
         "X",
         "Y",
-        "Z"
+        "Z",
       ],
       numCellWidth: 40,
       // 滚动条相关
       scrollBar: {
         x: 0,
-        y: 0
+        y: 0,
       },
       rightScrollBar: {
         top: 0,
         height:
           ((window.innerHeight - 60 - 25) / (25 * 100)) *
-          (window.innerHeight - 60 - 25)
+          (window.innerHeight - 60 - 25),
       },
       bottomScrollBar: {
         left: 0,
         width:
-          ((window.innerWidth - 40) / (120 * 26)) * (window.innerWidth - 40)
+          ((window.innerWidth - 40) / (120 * 26)) * (window.innerWidth - 40),
       },
       scrollBarMousedownPosition: {},
       // 滚动条透明度
@@ -226,7 +229,7 @@ export default {
       clickCell: {
         x: 0,
         y: 0,
-        show: false
+        show: false,
       },
       //当前单击的cell信息
       clickCellInfo: {
@@ -237,7 +240,7 @@ export default {
         yNum: 0,
         width: 0,
         height: 0,
-        txt: ""
+        txt: "",
       },
       //当前双击的cell信息
       dbClickCellInfo: {
@@ -248,17 +251,17 @@ export default {
         yNum: 0,
         width: 0,
         height: 0,
-        txt: ""
+        txt: "",
       },
       // mousedown坐标
       mousedownXY: {
         x: 0,
-        y: 0
+        y: 0,
       },
       //显示输入框
       cellIpt: false,
       // 选中的区域
-      selectArea: []
+      selectArea: [],
     };
   },
   computed: {
@@ -270,7 +273,7 @@ export default {
     },
     centerWidth() {
       return window.innerWidth - this.numCellWidth;
-    }
+    },
   },
   methods: {
     init() {
@@ -279,6 +282,23 @@ export default {
       this.handlerDrawCenter();
       this.handlerDomResize();
       this.handlerDomAddEvents();
+    },
+    //顶部canvas
+    handlerTopMousemove(e) {
+      let { headCells, numCellWidth, scrollBar } = this;
+      let allWidth = 0;
+      headCells.forEach((i) => {
+        let { width, x } = i;
+        if (
+          x + width - 10 < e.clientX - numCellWidth + scrollBar.x &&
+          e.clientX - numCellWidth + scrollBar.x < x + width + 10
+        ) {
+          this.isTopBorder = true;
+          console.log(true);
+        } else {
+          this.isTopBorder = false;
+        }
+      });
     },
     //单元格输入的内容
     handlerCellIptBlur(e) {
@@ -294,7 +314,7 @@ export default {
         handlerPointAddFixed,
         handlerClearRect,
         handlerPointRect,
-        ratio
+        ratio,
       } = this;
       let txt = e.target.innerHTML;
       ctx.fillStyle = "rgb(38, 38, 38);";
@@ -334,7 +354,7 @@ export default {
       e.preventDefault();
       this.mousedownXY = {
         x: e.clientX,
-        y: e.clientY
+        y: e.clientY,
       };
       window.addEventListener("mousemove", this.handlerCanvasMousemove);
     },
@@ -353,7 +373,7 @@ export default {
         scrollBar,
         cellHeight,
         cellWidth,
-        selectArea
+        selectArea,
       } = this;
       let movePosition = {};
       let { clientX, clientY } = e;
@@ -383,7 +403,9 @@ export default {
             let obj = {
               x: movePosition.x - x > 0 ? j * cellWidth + x : x - j * cellWidth,
               y:
-                movePosition.y - y > 0 ? i * cellHeight + y : y - i * cellHeight
+                movePosition.y - y > 0
+                  ? i * cellHeight + y
+                  : y - i * cellHeight,
             };
             arr.push(obj);
           }
@@ -414,7 +436,7 @@ export default {
       // console.log("db");
       let {
         centerCells,
-        clickCellInfo: { xNum, yNum }
+        clickCellInfo: { xNum, yNum },
       } = this;
       this.dbClickCellInfo = Object.assign({}, this.clickCellInfo);
       let range = window.getSelection();
@@ -437,7 +459,7 @@ export default {
         scrollBar,
         cellIpt,
         centerCells,
-        numCellWidth
+        numCellWidth,
       } = this;
       //判断当前是否编辑
       if (cellIpt) {
@@ -465,7 +487,7 @@ export default {
     handlerDomAddEvents() {
       window.addEventListener(
         "mousewheel",
-        e => {
+        (e) => {
           this.handlerWheel(e);
         },
         { passive: false }
@@ -512,7 +534,7 @@ export default {
         clickCell,
         clickCellInfo,
         bottomScrollBar,
-        centerWidth
+        centerWidth,
       } = this;
       scrollBar.x = scrollBar.x - deltaX;
       bottomScrollBar.left += (deltaX / (26 * 120)) * centerWidth;
@@ -540,7 +562,7 @@ export default {
         clickCell,
         clickCellInfo,
         rightScrollBar,
-        centerHeight
+        centerHeight,
       } = this;
       scrollBar.y -= deltaY;
       rightScrollBar.top += (deltaY / (100 * 25)) * (centerHeight - 3);
@@ -564,7 +586,7 @@ export default {
       this.scrollBarMousedownPosition = {
         x: e.clientX,
         y: e.clientY,
-        type
+        type,
       };
       this.scrollBarOpacity = 1;
       window.clearTimeout(this.scrollBarTimer);
@@ -588,7 +610,7 @@ export default {
         centerWidth,
         topCanvas,
         cellWidth,
-        wordsHead
+        wordsHead,
       } = this;
       if (bar.type) {
         let width = e.clientY - bar.y;
@@ -635,7 +657,7 @@ export default {
         topCanvas,
         wordsHead,
         headCells,
-        handlerPointRect
+        handlerPointRect,
       } = this;
       let ctx = this.$refs.topCanvas.getContext("2d");
       topCanvas.ctx = ctx;
@@ -646,7 +668,7 @@ export default {
           y: 0,
           width: cellWidth,
           height: cellHeight,
-          txt: wordsHead[i]
+          txt: wordsHead[i],
         };
         headCells.push(cell);
       }
@@ -659,7 +681,7 @@ export default {
         ctx.font = `normal ${12 * this.ratio}px PingFang SC`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        headCells.forEach(i => {
+        headCells.forEach((i) => {
           let { x, y, width, height, txt } = i;
           handlerPointRect(ctx, x, y, width, height, txt, "#fafafa");
         });
@@ -672,7 +694,7 @@ export default {
         wordsHead,
         cellWidth,
         cellHeight,
-        handlerPointRect
+        handlerPointRect,
       } = this;
       let ctx = this.$refs.centerCanvas.getContext("2d");
       centerCanvas.ctx = ctx;
@@ -686,7 +708,7 @@ export default {
             y: i * cellHeight,
             width: cellWidth,
             height: cellHeight,
-            txt: ""
+            txt: "",
           };
           line.push(cell);
         }
@@ -698,8 +720,8 @@ export default {
         ctx.font = `normal ${12 * this.ratio}px PingFang SC`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        centerCells.forEach(z => {
-          z.forEach(i => {
+        centerCells.forEach((z) => {
+          z.forEach((i) => {
             let { x, y, width, height, txt } = i;
             handlerPointRect(
               ctx,
@@ -721,7 +743,7 @@ export default {
         cellHeight,
         leftCanvas,
         letfCells,
-        handlerPointRect
+        handlerPointRect,
       } = this;
       let ctx = this.$refs.leftCanvas.getContext("2d");
       leftCanvas.ctx = ctx;
@@ -732,7 +754,7 @@ export default {
           y: (i - 1) * cellHeight,
           width: numCellWidth,
           height: cellHeight,
-          txt: i
+          txt: i,
         };
         letfCells.push(cell);
       }
@@ -744,7 +766,7 @@ export default {
         ctx.font = `normal ${12 * this.ratio}px PingFang SC`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        letfCells.forEach(i => {
+        letfCells.forEach((i) => {
           let { x, y, width, height, txt } = i;
           handlerPointRect(ctx, x, y, width, height, txt, "#fafafa");
         });
@@ -818,7 +840,7 @@ export default {
         numCellWidth,
         handlerPointRect,
         handlerDrawBorder,
-        wordsHead
+        wordsHead,
       } = this;
       let rowPosition = [0, y];
       let colPosition = [x, 0];
@@ -861,7 +883,7 @@ export default {
         handlerClearRect,
         numCellWidth,
         handlerPointRect,
-        wordsHead
+        wordsHead,
       } = this;
       let rowPosition = [0, y];
       let colPosition = [x, 0];
@@ -907,11 +929,11 @@ export default {
           "#fafafa"
         );
       }
-    }
+    },
   },
   watch: {
     copyClickCellInfo: {
-      handler: function(newVal, oldVal) {
+      handler: function (newVal, oldVal) {
         this.handlerDrawClickRowCol(newVal);
         if (oldVal.position) {
           if (newVal.x != oldVal.x && newVal.y != oldVal.y) {
@@ -923,12 +945,12 @@ export default {
           }
         }
       },
-      deep: true
-    }
+      deep: true,
+    },
   },
   mounted() {
     this.init();
-  }
+  },
 };
 </script>
 <style lang='scss'>
